@@ -15,3 +15,12 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect  # MySQL8Dialect ?? MySQL5Dialect
+
+  kakao:
+    client-id: e6cba8bdc76a3d72e7e3de193056c084
+    client-secret: oL5wQvUGRcyKoXGmTBJY0zKlcnYGBLnf
+
+  jwt:
+    secret: eod31f98h91hf2kdla
+    expiration: 1800000
+

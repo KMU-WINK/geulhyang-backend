@@ -15,8 +15,8 @@ public class JwtTokenProvider {
         this.validityInMilliseconds = validityInMilliseconds;
     }
 
-    public String createToken(Long userId, String email) {
-        Claims claims = Jwts.claims().setSubject(email);
+    public String createToken(Long userId, String nickname) {
+        Claims claims = Jwts.claims().setSubject(nickname);
         claims.put("userId", userId);
 
         Date now = new Date();
@@ -28,21 +28,5 @@ public class JwtTokenProvider {
                 .setExpiration(validity)
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
-    }
-
-    public boolean validateToken(String token) {
-        try {
-            Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    public Long getUserIdFromToken(String token) {
-        return ((Number) Jwts.parser().setSigningKey(secretKey)
-                .parseClaimsJws(token)
-                .getBody()
-                .get("userId")).longValue();
     }
 }

@@ -5,7 +5,6 @@ import lombok.Setter;
 
 @Setter @Getter
 public class KakaoUserInfoDto {
-    private String id;
-    private String email;
+    private Long id;
     private String nickname;
 }

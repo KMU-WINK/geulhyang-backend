@@ -7,10 +7,10 @@ import org.springframework.context.annotation.Bean;
 @Configuration
 public class JwtConfig {
 
-    @Value("eod31f98h91hf2kdla")
+    @Value("${jwt.secret}")
     private String secretKey;
 
-    @Value("1800000")
+    @Value("${jwt.expiration}")
     private long validityInMilliseconds;
 
     @Bean

@@ -2,7 +2,7 @@ package bootcamp.geulhyang.controller;
 
 import bootcamp.geulhyang.dto.KaKaoTokenDto;
 import bootcamp.geulhyang.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,14 +14,24 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
+@Slf4j
 public class AuthController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+
+    public AuthController(UserService userService) {
+        this.userService = userService;
+    }
 
     @PostMapping("/kakao")
     public ResponseEntity<Map<String, String>> kakaoLogin(@RequestBody KaKaoTokenDto kakaoTokenDto) {
-        String jwtToken = userService.processKakaoLogin(kakaoTokenDto.getAccessToken());
+        log.info("Received authorization code: {}", kakaoTokenDto.getCode());
+
+        String jwtToken = userService.processKakaoLogin(kakaoTokenDto.getCode());
+
+        // jwtToken 로그 찍기
+        log.info("Generated JWT Token: {}", jwtToken);
+
         Map<String, String> response = new HashMap<>();
         response.put("token", jwtToken);
         return ResponseEntity.ok(response);

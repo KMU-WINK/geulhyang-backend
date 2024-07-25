@@ -1,6 +1,7 @@
 package bootcamp.geulhyang.service;
 
 import bootcamp.geulhyang.dto.KakaoUserInfoDto;
+import bootcamp.geulhyang.dto.RegisterDto;
 import bootcamp.geulhyang.entity.User;
 import bootcamp.geulhyang.repository.UserRepository;
 import bootcamp.geulhyang.security.JwtTokenProvider;
@@ -11,6 +12,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+
 
 @Service
 @Slf4j
@@ -41,6 +43,33 @@ public class UserService {
     }
 
     public String processKakaoLogin(String authorizationCode) {
+        KakaoUserInfoDto kakaoUserInfo = getKakaoUserInfo(authorizationCode);
+
+        // 사용자 정보 처리 및 JWT 토큰 생성
+        User user = userRepository.findByKakaoId(kakaoUserInfo.getId())
+                        .orElse(null);
+
+        if (user == null) {
+            return "firstLogin";
+        }
+        return jwtTokenProvider.createToken(user.getId(), user.getNickname());
+    }
+
+    public String register(RegisterDto registerDto) {
+        KakaoUserInfoDto kakaoUserInfo = getKakaoUserInfo(registerDto.getCode());
+
+        User newUser = new User();
+        newUser.setKakaoId(kakaoUserInfo.getId());
+        newUser.setNickname(registerDto.getNickname());
+        newUser.setGenderFromString(registerDto.getGender());
+        newUser.setAge(registerDto.getAge());
+
+        userRepository.save(newUser);
+
+        return jwtTokenProvider.createToken(newUser.getId(), newUser.getNickname());
+    }
+
+    private KakaoUserInfoDto getKakaoUserInfo(String code){
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
@@ -50,7 +79,7 @@ public class UserService {
                 .queryParam("grant_type", "authorization_code")
                 .queryParam("client_id", clientId)
                 .queryParam("redirect_uri", clientUrl + "/auth/kakao/callback")
-                .queryParam("code", authorizationCode)
+                .queryParam("code", code)
                 .queryParam("client_secret", clientSecret);
 
         HttpEntity<?> entity = new HttpEntity<>(headers);
@@ -69,19 +98,7 @@ public class UserService {
 
                 log.info("Received access token: {}", accessToken);
 
-                // 액세스 토큰을 사용하여 사용자 정보 요청
-                KakaoUserInfoDto kakaoUserInfo = kakaoAuthService.getKakaoUserInfo(accessToken);
-
-                // 사용자 정보 처리 및 JWT 토큰 생성
-                User user = userRepository.findByKakaoId(kakaoUserInfo.getId())
-                        .orElseGet(() -> {
-                            User newUser = new User();
-                            newUser.setKakaoId(kakaoUserInfo.getId());
-                            newUser.setNickname(kakaoUserInfo.getNickname());
-                            return userRepository.save(newUser);
-                        });
-
-                return jwtTokenProvider.createToken(user.getId(), user.getNickname());
+                return kakaoAuthService.getKakaoUserInfo(accessToken);
             } else {
                 log.error("Failed to fetch access token from Kakao API. Status code: {}", response.getStatusCode());
                 throw new RuntimeException("Failed to fetch access token from Kakao API");
@@ -90,7 +107,6 @@ public class UserService {
             log.error("Exception occurred while fetching access token from Kakao API", e);
             throw new RuntimeException("Exception occurred while fetching access token from Kakao API", e);
         }
-    }
 
-    
+    }
 }

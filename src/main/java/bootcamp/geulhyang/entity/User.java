@@ -17,4 +17,8 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private Gender gender;
+
+    public void setGenderFromString(String gender) {
+        this.gender = Gender.fromString(gender);
+    }
 }

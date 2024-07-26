@@ -1,6 +1,7 @@
 package bootcamp.geulhyang.controller;
 
 import bootcamp.geulhyang.dto.KaKaoTokenDto;
+import bootcamp.geulhyang.dto.LoginStatusDto;
 import bootcamp.geulhyang.dto.RegisterDto;
 import bootcamp.geulhyang.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -28,20 +29,16 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> kakaoLogin(@RequestBody KaKaoTokenDto kakaoTokenDto) {
         log.info("Received authorization code: {}", kakaoTokenDto.getCode());
 
-        String jwtToken = userService.processKakaoLogin(kakaoTokenDto.getCode());
+        LoginStatusDto loginStatus = userService.processKakaoLogin(kakaoTokenDto.getCode());
 
-        if (jwtToken.equals("firstLogin")) {
-            Map<String, String> response = new HashMap<>();
-            response.put("status", "new_user");
-            response.put("message", "none");
-            return ResponseEntity.ok(response);
-        }
-
-        // jwtToken 로그 찍기
-        log.info("Generated JWT Token: {}", jwtToken);
+        // 로그에 로그인 상태와 토큰 정보를 출력
+        log.info("Login status: {}", loginStatus.getStatus());
+        log.info("Login token: {}", loginStatus.getToken());
 
         Map<String, String> response = new HashMap<>();
-        response.put("token", jwtToken);
+        response.put("token", loginStatus.getToken());
+        response.put("message", loginStatus.getStatus());
+
         return ResponseEntity.ok(response);
     }
 

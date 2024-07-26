@@ -8,6 +8,5 @@ public class RegisterDto {
     private String code;
     private Long age;
     private String nickname;
-
     private String gender;
 }

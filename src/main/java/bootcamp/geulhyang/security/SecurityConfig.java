@@ -14,11 +14,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/auth/kakao") // CSRF를 비활성화할 경로
+                        .ignoringRequestMatchers("/auth/*") // CSRF를 비활성화할 경로
                 )
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/auth/kakao").permitAll()
+                                .requestMatchers("/auth/*").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .formLogin(formLogin -> formLogin.disable()); // 폼 로그인을 비활성화

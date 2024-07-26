@@ -33,15 +33,15 @@ public class UserService {
     }
 
     public LoginStatusDto processKakaoLogin(String authorizationCode) {
-        KakaoUserInfoDto kakaoUserInfo = kakaoAuthService.getKakaoUserInfo(authorizationCode);
+        String kakaoToken = kakaoAuthService.getKakaoAccessToken(authorizationCode);
+        KakaoUserInfoDto kakaoUserInfo = kakaoAuthService.getKakaoUserInfo(kakaoToken);
 
         // 사용자 정보 처리 및 JWT 토큰 생성
         User user = userRepository.findByKakaoId(kakaoUserInfo.getId())
                         .orElse(null);
 
         if (user == null) {
-            String token = kakaoAuthService.getKakaoAccessToken(authorizationCode);
-            return new LoginStatusDto("firstLogin", token);
+            return new LoginStatusDto("firstLogin", kakaoToken);
         }
 
         String token = jwtTokenProvider.createToken(user.getId(), user.getNickname());

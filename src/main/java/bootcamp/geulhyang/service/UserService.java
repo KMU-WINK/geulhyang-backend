@@ -49,7 +49,7 @@ public class UserService {
     }
 
     public String register(RegisterDto registerDto) {
-        KakaoUserInfoDto kakaoUserInfo = kakaoAuthService.getKakaoUserInfo(registerDto.getCode());
+        KakaoUserInfoDto kakaoUserInfo = kakaoAuthService.getKakaoUserInfo(registerDto.getToken());
 
         User newUser = new User();
         newUser.setKakaoId(kakaoUserInfo.getId());

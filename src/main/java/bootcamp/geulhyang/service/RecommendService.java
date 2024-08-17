@@ -1,66 +1,82 @@
 package bootcamp.geulhyang.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import bootcamp.geulhyang.dto.response.Book;
+import bootcamp.geulhyang.util.OpenApi;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+import net.minidev.json.JSONArray;
+import net.minidev.json.JSONObject;
+import net.minidev.json.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class RecommendService {
 
-    private static final Logger log = LoggerFactory.getLogger(RecommendService.class);
+    private final String url;
     private final String authKey;
 
-    RecommendService(@Value("${library.auth-key}") String authKey) {
+    RecommendService(@Value("${library.auth-key}") String authKey,
+                     @Value("${library.url}") String url)
+    {
+        this.url = url;
         this.authKey = authKey;
     }
 
-    public List<Map<String, Object>> popularRecommend() {
+    public List<Book> popularRecommend() throws Exception {
 
         RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+        restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
+        ObjectMapper objectMapper = new ObjectMapper();
 
-        String url = "http://data4library.kr/api/loanItemSrch";// 실제 발급받은 키로 교체하세요
+        log.info("hi~~~~~~~~~~~~~~~~~~~`");
 
         // URI 빌더를 사용해 필요한 쿼리 파라미터 추가
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(url)
+        String requestUrl = UriComponentsBuilder.fromHttpUrl(url)
                 .queryParam("authKey", authKey)
                 .queryParam("pageNo", "1")
                 .queryParam("pageSize", "5")
-                .queryParam("format", "json");
+                .queryParam("format", "json")
+                .toUriString();
 
-        Map<String, Object> response = restTemplate.getForObject(uriBuilder.toUriString(), Map.class);
 
-        // 받은 데이터를 파싱하여 원하는 형식으로 변환
-        if (Objects.nonNull(response) && response.containsKey("response")) {
-            Map<String, Object> responseData = (Map<String, Object>) response.get("response");
+        OpenApi openApi = new OpenApi();
+        String json = openApi.getOpenApi(requestUrl);
+        log.info(json);
+        JSONParser parser = new JSONParser();
+        JSONObject obj = (JSONObject) parser.parse(json);
+        JSONObject resopnse = (JSONObject) obj.get("response");
+        JSONArray docs = (JSONArray) resopnse.get("docs");
 
-            if (responseData.containsKey("docs")) {
-                List<Map<String, Object>> docs = (List<Map<String, Object>>) responseData.get("docs");
+        List<Book> popularBooks = new ArrayList<Book>();
+        Book book;
 
-                return docs.stream().map(doc -> {
-                    Map<String, Object> bookInfo = (Map<String, Object>) doc.get("doc");
+        for(int i=0; i<docs.size(); i++){
+            book = new Book();
 
-                    return Map.of(
-                            "isbn", bookInfo.get("isbn13"),
-                            "rank", doc.get("ranking"),
-                            "name", bookInfo.get("bookname"),
-                            "author", bookInfo.get("authors"),
-                            "publisher", bookInfo.get("publisher"),
-                            "publishedAt", bookInfo.get("publication_year"),
-                            "coverImage", bookInfo.get("bookImageURL")
-                    );
-                }).collect(Collectors.toList());
-            }
+            JSONObject doc = (JSONObject) docs.get(i);
+            JSONObject docData = (JSONObject) doc.get("doc");
+            book.setIsbn(""+docData.get("isbn13"));
+            book.setRank(Integer.parseInt(""+docData.get("ranking")));
+            book.setName(""+docData.get("bookname"));
+            book.setAuthor(""+docData.get("authors"));
+            book.setPublisher(""+docData.get("publisher"));
+            book.setPublishedAt(""+docData.get("publication_year "));
+            book.setCoverImage(""+docData.get("bookImageURL"));
+
+            popularBooks.add(book);
         }
 
-        // 만약 결과가 없다면 빈 리스트 반환
-        return List.of();
+        return popularBooks;
     }
 }

@@ -1,9 +1,10 @@
 package bootcamp.geulhyang.controller;
 
-import bootcamp.geulhyang.dto.KaKaoTokenDto;
-import bootcamp.geulhyang.dto.LoginStatusDto;
-import bootcamp.geulhyang.dto.RegisterDto;
+import bootcamp.geulhyang.dto.request.KaKaoTokenDto;
+import bootcamp.geulhyang.dto.request.LoginStatusDto;
+import bootcamp.geulhyang.dto.request.RegisterDto;
 import bootcamp.geulhyang.service.UserService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,14 +17,11 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
+@RequiredArgsConstructor
 @Slf4j
 public class AuthController {
 
     private final UserService userService;
-
-    public AuthController(UserService userService) {
-        this.userService = userService;
-    }
 
     @PostMapping("/kakao")
     public ResponseEntity<Map<String, String>> kakaoLogin(@RequestBody KaKaoTokenDto kakaoTokenDto) {

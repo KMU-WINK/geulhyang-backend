@@ -1,6 +1,6 @@
 package bootcamp.geulhyang.service;
 
-import bootcamp.geulhyang.dto.KakaoUserInfoDto;
+import bootcamp.geulhyang.dto.request.KakaoUserInfoDto;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;

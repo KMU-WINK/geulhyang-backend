@@ -1,11 +1,12 @@
 package bootcamp.geulhyang.service;
 
-import bootcamp.geulhyang.dto.KakaoUserInfoDto;
-import bootcamp.geulhyang.dto.LoginStatusDto;
-import bootcamp.geulhyang.dto.RegisterDto;
+import bootcamp.geulhyang.dto.request.KakaoUserInfoDto;
+import bootcamp.geulhyang.dto.request.LoginStatusDto;
+import bootcamp.geulhyang.dto.request.RegisterDto;
 import bootcamp.geulhyang.entity.User;
 import bootcamp.geulhyang.repository.UserRepository;
 import bootcamp.geulhyang.security.JwtTokenProvider;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
@@ -14,23 +15,12 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final KakaoAuthService kakaoAuthService;
-
-
-
-    public UserService(
-            UserRepository userRepository,
-            JwtTokenProvider jwtTokenProvider,
-            KakaoAuthService kakaoAuthService)
-    {
-        this.userRepository = userRepository;
-        this.jwtTokenProvider = jwtTokenProvider;
-        this.kakaoAuthService = kakaoAuthService;
-    }
 
     public LoginStatusDto processKakaoLogin(String authorizationCode) {
         String kakaoToken = kakaoAuthService.getKakaoAccessToken(authorizationCode);

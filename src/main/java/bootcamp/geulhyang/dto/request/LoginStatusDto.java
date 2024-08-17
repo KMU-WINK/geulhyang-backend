@@ -1,4 +1,4 @@
-package bootcamp.geulhyang.dto;
+package bootcamp.geulhyang.dto.request;
 
 import lombok.Getter;
 

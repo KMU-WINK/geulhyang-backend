@@ -30,42 +30,39 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException{
+                                    FilterChain filterChain) throws ServletException, IOException {
         String path = request.getRequestURI();
-        if (path.startsWith("/auth")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
 
-        String authorizationHeader = request.getHeader("Authorization");
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            String token = authorizationHeader.substring(7);
-            // 토큰 검증 로직 추가
+        // /api 경로만 필터링
+        if (!path.startsWith("/auth/") && !path.startsWith("/home")) {
+            String authorizationHeader = request.getHeader("Authorization");
+            if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+                String token = authorizationHeader.substring(7);
+                // 토큰 검증 로직 추가
+                try {
+                    Claims claims = Jwts.parserBuilder()
+                            .setSigningKey(secretKey)
+                            .build()
+                            .parseClaimsJws(token)
+                            .getBody();
 
-            try {
-                Claims claims = Jwts.parserBuilder()
-                        .setSigningKey(secretKey)
-                        .build()
-                        .parseClaimsJws(token)
-                        .getBody();
+                    String nickname = claims.getSubject();
+                    Long userId = claims.get("userId", Long.class);
 
-                String nickname = claims.getSubject();
-                Long userId = claims.get("userId", Long.class);
+                    if (nickname != null && userId != null) {
+                        UserDetails userDetails = new User(nickname, "", Collections.emptyList());
+                        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
-                if (nickname != null && userId != null) {
-                    UserDetails userDetails = new User(nickname, "", Collections.emptyList());
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    }
 
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } catch (JwtException e) {
+                    log.info("JWT token expired or invalid");
                 }
-
-            } catch (JwtException e) {
-                log.info("jwt token expired");
             }
         }
-
         filterChain.doFilter(request, response);
     }
 }
